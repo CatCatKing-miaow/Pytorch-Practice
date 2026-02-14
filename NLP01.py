@@ -4,7 +4,7 @@ import torch.optim as optim
 
 sentences = ["i love this movie", "this movie is good", "fantastic result", 
              "i hate this movie", "this movie is bad", "terrible result"]
-labels = [1, 1, 1, 0, 0, 0]  # 1=Positive, 0=Negative
+labels = [1, 1, 1, 0, 0, 0]  # 1=Pos, 0=Neg
 
 # 构建词表 (Vocabulary)
 word_list = " ".join(sentences).split()
@@ -23,21 +23,17 @@ targets = torch.tensor(labels, dtype=torch.float)
 class TextClassifier(nn.Module):
     def __init__(self):
         super(TextClassifier, self).__init__()
-        # Embedding层: 把单词索引变成向量 (比如每个词变 dim=10 的向量)
+        # Embedding层
         self.embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=10)
-        # LSTM层: 处理序列信息
+        # LSTM层
         self.lstm = nn.LSTM(input_size=10, hidden_size=6)
-        # Linear层: 输出一个概率值
+        # Linear层
         self.linear = nn.Linear(in_features=6, out_features=1)
         self.sigmoid = nn.Sigmoid() # 把结果压到 0-1 之间
 
     def forward(self, x):
-        # x 的形状: [seq_len] -> [seq_len, embedding_dim]
         embeds = self.embedding(x)
-        # LSTM 需要 input 形状为 [seq_len, batch, input_size]
-        # 这里我们就用 batch=1 简单处理
         lstm_out, _ = self.lstm(embeds.view(len(x), 1, -1))
-        # 取最后一个时间步的输出作为句子的特征
         last_hidden = lstm_out[-1] 
         # 全连接层分类
         out = self.linear(last_hidden)
@@ -45,23 +41,20 @@ class TextClassifier(nn.Module):
 
 model = TextClassifier()
 
-criterion = nn.BCELoss()  # 二分类常用的 Loss
+criterion = nn.BCELoss()  
 optimizer = optim.Adam(model.parameters(), lr=0.01)
 
 print("开始训练...")
 for epoch in range(500):  # 训练500轮
     total_loss = 0
     for i in range(len(inputs)):
-        # 1. 清空梯度
+        #  清空梯度
         model.zero_grad()
-        
-        # 2. 前向传播
+        #  前向传播
         output = model(inputs[i])
-        
-        # 3. 计算 Loss
+        #  计算 Loss
         loss = criterion(output.view(-1), targets[i].view(-1))
-        
-        # 4. 反向传播 & 更新参数
+        #  反向传播 & 更新参数
         loss.backward()
         optimizer.step()
         
@@ -71,14 +64,14 @@ for epoch in range(500):  # 训练500轮
         print(f"Epoch {epoch+1}, Loss: {total_loss:.4f}")
 
 print("\n=== 测试结果 ===")
-test_sent = "i love result" # 哪怕是新组合的句子
+test_sent = "i love result" 
 test_vec = make_data(test_sent)
 predict = model(test_vec)
 print(f"输入句子: '{test_sent}'")
-print(f"预测得分: {predict.item():.4f} (越接近1越正面)")
+print(f"预测得分: {predict.item():.4f} ")
 
 test_sent2 = "terrible movie"
 test_vec2 = make_data(test_sent2)
 predict2 = model(test_vec2)
 print(f"输入句子: '{test_sent2}'")
-print(f"预测得分: {predict2.item():.4f} (越接近0越负面)")
+print(f"预测得分: {predict2.item():.4f} ")
