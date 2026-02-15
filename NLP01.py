@@ -34,7 +34,7 @@ class TextClassifier(nn.Module):
     def forward(self, x):
         embeds = self.embedding(x)
         lstm_out, _ = self.lstm(embeds.view(len(x), 1, -1))
-        last_hidden = lstm_out[-1] 
+        last_hidden= lstm_out[-1] 
         # 全连接层分类
         out = self.linear(last_hidden)
         return torch.sigmoid(out)
