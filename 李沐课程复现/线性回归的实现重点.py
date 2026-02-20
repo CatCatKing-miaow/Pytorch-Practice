@@ -1,7 +1,5 @@
 import torch
-import numpy as np
-from torch.utils import data
-import random
+
 def synthetic_data(w,b,num_examples):
     x=torch.normal(0,1,(num_examples,len(w)))
     y=torch.matmul(x,w)+b
