@@ -1,3 +1,4 @@
+#这个脚本模拟了2D卷积层的计算原理。
 import torch
 import torch.nn as nn
 
@@ -10,11 +11,6 @@ def corr2d(X,K):
             Y[i,j] = (X[i:i+h,j:j+w]*K).sum()
     return Y
 
-#验证corr2d的输出
-X=torch.tensor([[0.0,1.0,2.0],[3.0,4.0,5.0],[6.0,7.0,8.0]])
-K=torch.tensor([[0.,1.],[2.,3.]])
-print(corr2d(X,K))
-
 class Conv2D(nn.Module):
     """实现2D卷积层"""
     def __init__(self,kernel_size):
@@ -23,29 +19,36 @@ class Conv2D(nn.Module):
         self.bias = nn.Parameter(torch.zeros(1))
     def forward(self,x):
         return corr2d(x,self.weight)+self.bias
-    
-#利用卷积实现边缘检测
-X = torch.ones((6,8))
-X[:,2:6]=0
-print(X)
-K = torch.tensor([[1.,-1.]])
-Y=corr2d(X,K)
-print(Y)
-"""卷积核K只能检测垂直边缘"""
-# Y=corr2d(X.t(),K)
-# print(Y)#输出结果全是0
+if __name__ =="__main__":
+    #验证corr2d的输出
+    X=torch.tensor([[0.0,1.0,2.0],[3.0,4.0,5.0],[6.0,7.0,8.0]])
+    K=torch.tensor([[0.,1.],[2.,3.]])
+    print(corr2d(X,K))
 
-"""学习由X生成Y的卷积核"""
-conv2d = nn.Conv2d(1,1,kernel_size=(1,2),bias=False)
 
-X=X.reshape((1,1,6,8))
-Y=Y.reshape((1,1,6,7))
-for i in range(10):
-    Y_hat = conv2d(X)
-    l = (Y_hat-Y)**2#模拟nn.MSELoss
-    conv2d.zero_grad()
-    l.sum().backward()
-    conv2d.weight.data[:]-=3e-2*conv2d.weight.grad#模拟step
-    if (i+1)%2==0:
-        print(f"batch{i+1},loss:{l.sum():.3f}")
-conv2d.weight.data.reshape((1,2))
+        
+    #利用卷积实现边缘检测
+    X = torch.ones((6,8))
+    X[:,2:6]=0
+    print(X)
+    K = torch.tensor([[1.,-1.]])
+    Y=corr2d(X,K)
+    print(Y)
+    """卷积核K只能检测垂直边缘"""
+    # Y=corr2d(X.t(),K)
+    # print(Y)#输出结果全是0
+
+    """学习由X生成Y的卷积核"""
+    conv2d = nn.Conv2d(1,1,kernel_size=(1,2),bias=False)
+
+    X=X.reshape((1,1,6,8))
+    Y=Y.reshape((1,1,6,7))
+    for i in range(10):
+        Y_hat = conv2d(X)
+        l = (Y_hat-Y)**2#模拟nn.MSELoss
+        conv2d.zero_grad()
+        l.sum().backward()
+        conv2d.weight.data[:]-=3e-2*conv2d.weight.grad#模拟step
+        if (i+1)%2==0:
+            print(f"batch{i+1},loss:{l.sum():.3f}")
+    conv2d.weight.data.reshape((1,2))
